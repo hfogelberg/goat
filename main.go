@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -8,7 +9,7 @@ import (
 	"os"
 
 	"github.com/gorilla/sessions"
-
+	_ "github.com/lib/pq"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -26,6 +27,7 @@ var (
 	oauthStateString = "random"
 	hmacSampleSecret = []byte(HmacSecret)
 	store            *sessions.CookieStore
+	db               *sql.DB
 )
 
 type GoogleUser struct {
@@ -45,6 +47,19 @@ const (
 	HmacSecret = "secret"
 	Port       = ":3000"
 )
+
+func init() {
+	var err error
+	db, err = sql.Open("postgres", "postgres://Henrik:password@localhost/helenart?sslmode=disable")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = db.Ping(); err != nil {
+		panic(err)
+	}
+	fmt.Println("You connected to your database.")
+}
 
 func main() {
 	store = sessions.NewCookieStore([]byte(HmacSecret))
@@ -92,6 +107,13 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(contents, &user)
 	if err != nil {
 		fmt.Println("Error unmarshaling Google user", err.Error())
+		return
+	}
+
+	sql := "INSERT INTO users(email, token) VALUES ($1, $2)"
+	_, err = db.Exec(sql, user.Email, token.AccessToken)
+	if err != nil {
+		fmt.Println("Error inserting user", err.Error())
 		return
 	}
 
