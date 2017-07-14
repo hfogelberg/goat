@@ -128,11 +128,18 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = saveUserToDb(user.Email, token.AccessToken)
+	// err = saveUserToDb(user.Email, token.AccessToken)
+	userID, err := createUser(user.Name, user.Email)
 	if err != nil {
 		fmt.Println("Erro saving user to Db")
 		fmt.Println(err.Error())
 		return
+	}
+
+	err = createToken(userID, token.AccessToken)
+	if err != nil {
+		fmt.Println("Error creating token")
+		fmt.Println(err.Error())
 	}
 
 	session, err := store.Get(r, "lizzard")
@@ -160,13 +167,13 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Token: ", session.Values["accessToken"])
 }
 
-func saveUserToDb(email string, token string) error {
-	sql := "INSERT INTO users(email, token) VALUES ($1, $2)"
-	_, err := db.Exec(sql, email, token)
-	if err != nil {
-		fmt.Println("Error inserting user", err.Error())
-		return err
-	}
+// func saveUserToDb(email string, token string) error {
+// 	sql := "INSERT INTO users(email, token) VALUES ($1, $2)"
+// 	_, err := db.Exec(sql, email, token)
+// 	if err != nil {
+// 		fmt.Println("Error inserting user", err.Error())
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
