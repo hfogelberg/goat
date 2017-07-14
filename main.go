@@ -8,8 +8,11 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/dchest/uniuri"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
+	"github.com/urfave/negroni"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -23,8 +26,6 @@ var (
 			"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint: google.Endpoint,
 	}
-	// Some random string, random for each request
-	oauthStateString = "random"
 	hmacSampleSecret = []byte(HmacSecret)
 	store            *sessions.CookieStore
 	db               *sql.DB
@@ -64,12 +65,28 @@ func init() {
 func main() {
 	store = sessions.NewCookieStore([]byte(HmacSecret))
 
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/googlelogin", authHandler)
-	http.HandleFunc("/callback", callbackHandler)
-	http.HandleFunc("/admin", adminHandler)
+	router := mux.NewRouter().StrictSlash(false)
+	router.HandleFunc("/", indexHandler)
+	router.HandleFunc("/googlelogin", authHandler)
+	router.HandleFunc("/callback", callbackHandler)
 
-	http.ListenAndServe(Port, nil)
+	adm := router.PathPrefix("/admin").Subrouter()
+	adm.HandleFunc("/", adminHandler)
+
+	mux := http.NewServeMux()
+	mux.Handle("/", router)
+	mux.Handle("/admin/", negroni.New(
+		negroni.HandlerFunc(authMiddleware),
+		negroni.Wrap(router),
+	))
+
+	static := http.StripPrefix("/public/", http.FileServer(http.Dir("public")))
+	router.PathPrefix("/public").Handler(static)
+
+	n := negroni.Classic()
+	n.UseHandler(mux)
+
+	http.ListenAndServe(Port, n)
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,6 +95,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func authHandler(w http.ResponseWriter, r *http.Request) {
+	oauthStateString := uniuri.New()
 	url := googleOauthConfig.AuthCodeURL(oauthStateString)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
@@ -110,10 +128,10 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sql := "INSERT INTO users(email, token) VALUES ($1, $2)"
-	_, err = db.Exec(sql, user.Email, token.AccessToken)
+	err = saveUserToDb(user.Email, token.AccessToken)
 	if err != nil {
-		fmt.Println("Error inserting user", err.Error())
+		fmt.Println("Erro saving user to Db")
+		fmt.Println(err.Error())
 		return
 	}
 
@@ -140,4 +158,15 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Name: ", session.Values["name"])
 	fmt.Fprintln(w, "Email: ", session.Values["email"])
 	fmt.Fprintln(w, "Token: ", session.Values["accessToken"])
+}
+
+func saveUserToDb(email string, token string) error {
+	sql := "INSERT INTO users(email, token) VALUES ($1, $2)"
+	_, err := db.Exec(sql, email, token)
+	if err != nil {
+		fmt.Println("Error inserting user", err.Error())
+		return err
+	}
+
+	return nil
 }
