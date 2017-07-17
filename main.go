@@ -166,14 +166,3 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Email: ", session.Values["email"])
 	fmt.Fprintln(w, "Token: ", session.Values["accessToken"])
 }
-
-// func saveUserToDb(email string, token string) error {
-// 	sql := "INSERT INTO users(email, token) VALUES ($1, $2)"
-// 	_, err := db.Exec(sql, email, token)
-// 	if err != nil {
-// 		fmt.Println("Error inserting user", err.Error())
-// 		return err
-// 	}
-
-// 	return nil
-// }
