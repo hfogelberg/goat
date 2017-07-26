@@ -67,6 +67,7 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(false)
 	router.HandleFunc("/", indexHandler)
+	router.HandleFunc("/login", loginHandler)
 	router.HandleFunc("/googlelogin", authHandler)
 	router.HandleFunc("/callback", callbackHandler)
 
@@ -90,6 +91,11 @@ func main() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	s := `<html><body><a href="/googlelogin">Log in with Google</a></body></html>`
+	fmt.Fprintf(w, s)
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
 	s := `<html><body><a href="/googlelogin">Log in with Google</a></body></html>`
 	fmt.Fprintf(w, s)
 }

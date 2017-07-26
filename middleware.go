@@ -1,4 +1,4 @@
-package main
+package gobi
 
 import (
 	"log"
@@ -6,7 +6,6 @@ import (
 )
 
 func authMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	log.Println("AUTH MIDDLEWARE")
 	// 1. Get cookie. If there is no cookie, redirect to login
 	session, err := store.Get(r, "lizzard")
 	if err != nil {
@@ -30,8 +29,6 @@ func authMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFun
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	}
 
-	log.Printf("User Id is %v", userID)
-
 	if userID == 0 {
 		log.Println("Unknown email. Redirect to login")
 		// delete cookie
@@ -50,8 +47,6 @@ func authMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFun
 		next(w, r)
 	}
 
-	log.Printf("Token is valid returns %v", tokenIsValid)
-
 	// Token is new, save in Db
 	if tokenIsValid == false {
 		err := createToken(userID, token)
@@ -63,8 +58,6 @@ func authMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFun
 			next(w, r)
 		}
 	}
-
-	log.Println("Everything is Ok. Can show admin page.")
 
 	next(w, r)
 }
