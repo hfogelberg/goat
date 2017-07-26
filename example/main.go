@@ -44,6 +44,7 @@ func main() {
 	router.HandleFunc("/googlelogin", goat.GoogleLoginHandler)
 	router.HandleFunc("/callback", goat.CallbackHandler)
 	router.HandleFunc("/admin", adminHandler)
+
 	// Serve assets
 	static := http.StripPrefix("/public/", http.FileServer(http.Dir("public")))
 	router.PathPrefix("/public/").Handler(static)
