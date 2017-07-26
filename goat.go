@@ -28,11 +28,13 @@ var (
 
 	store       *sessions.CookieStore
 	urlRedirect string
+	cookieName  string
 )
 
-func New(s *sessions.CookieStore, url string) {
+func New(s *sessions.CookieStore, url string, cookie string) {
 	urlRedirect = url
 	store = s
+	cookieName = cookie
 }
 
 func GoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +86,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Println(err.Error())
 	// }
 
-	session, err := store.Get(r, "lizzard")
+	session, err := store.Get(r, cookieName)
 	if err != nil {
 		fmt.Println("Error getting session", err.Error())
 		return

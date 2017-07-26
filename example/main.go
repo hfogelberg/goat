@@ -37,7 +37,7 @@ func init() {
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 
-	goat.New(sessions.NewCookieStore([]byte(HmacSecret)), "/admin")
+	goat.New(sessions.NewCookieStore([]byte(HmacSecret)), "/admin", "lizzardcookie")
 
 	// Routing
 	router.HandleFunc("/", indexHandler)

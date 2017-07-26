@@ -1,13 +1,17 @@
 # Goat
 
-Work in progress.
+Work in Progress!
 
-Oauth for Golang. Currently only supporting 
-Google.
+Features
+- Creates and saves cookie with custom name
+- User is created in Database (currently supports Postgresql)
+- Verifies that user has cookie and that the user is valid when revisiting page
+
+Golang Oauth package. See example for usage.
+
+Currently only supporting Google.
 
 ## Todo
-- Turn in to package
 - Add Twitter
 - Add Facebook
-- Should Db handling be included in package or pulled out? Pulled out I think, but included in example.
 
