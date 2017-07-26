@@ -1,6 +1,7 @@
 package goat
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/dchest/uniuri"
 	"github.com/gorilla/sessions"
+	_ "github.com/lib/pq"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -26,12 +28,14 @@ var (
 		Endpoint: google.Endpoint,
 	}
 
+	db          *sql.DB
 	store       *sessions.CookieStore
 	urlRedirect string
 	cookieName  string
 )
 
-func New(s *sessions.CookieStore, url string, cookie string) {
+func New(d *sql.DB, s *sessions.CookieStore, url string, cookie string) {
+	db = d
 	urlRedirect = url
 	store = s
 	cookieName = cookie
@@ -72,13 +76,15 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println(user.Email)
-	// err = saveUserToDb(user.Email, token.AccessToken)
-	// userID, err := createUser(user.Name, user.Email)
-	// if err != nil {
-	// 	fmt.Println("Erro saving user to Db")
-	// 	fmt.Println(err.Error())
-	// 	return
-	// }
+
+	userID, err := createUser(user.Name, user.Email)
+	if err != nil {
+		fmt.Println("Erro saving user to Db")
+		fmt.Println(err.Error())
+		return
+	}
+
+	fmt.Println("User id ", userID)
 
 	// err = createToken(userID, token.AccessToken)
 	// if err != nil {

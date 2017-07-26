@@ -1,4 +1,4 @@
-package main
+package goat
 
 import (
 	"database/sql"
@@ -70,4 +70,3 @@ func tokenIsValid(token string) (bool, error) {
 		return true, nil
 	}
 }
-Contact GitHub 
