@@ -1,0 +1,53 @@
+html, body {
+  font-family: sans-serif;
+  font-size: 20px;
+  font-weight: 300;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #bdc3c7;
+}
+
+h1 {
+  margin-top: 1em;
+  margin-bottom: 2em;
+  text-align: center;
+  font-size: 3.8em;
+}
+
+a {
+  color: rgba(52, 73, 94,1.0);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2em;
+  display: block;
+  text-align: center;
+}
+
+a:link {
+  color: rgba(52, 73, 94,1.0);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+a:visited {
+  color: rgba(52, 73, 94,1.0);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+a:hover {
+  color: rgba(52, 73, 94,1.0);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+a:active {
+  color: rgba(52, 73, 94,1.0);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2em;
+}
