@@ -1,7 +1,6 @@
 package goat
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/dchest/uniuri"
 	"github.com/gorilla/sessions"
-	_ "github.com/lib/pq"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -28,17 +26,19 @@ var (
 		Endpoint: google.Endpoint,
 	}
 
-	db          *sql.DB
-	store       *sessions.CookieStore
-	urlRedirect string
-	cookieName  string
+	store      *sessions.CookieStore
+	adminUrl   string
+	signupOk   bool
+	publicUrl  string
+	cookieName string
 )
 
-func New(d *sql.DB, s *sessions.CookieStore, url string, cookie string) {
-	db = d
-	urlRedirect = url
+func New(s *sessions.CookieStore, urlPublic string, urlAdmin string, nameOfCookie string, allowSignup bool) {
+	publicUrl = urlPublic
 	store = s
-	cookieName = cookie
+	signupOk = allowSignup
+	adminUrl = urlAdmin
+	cookieName = nameOfCookie
 }
 
 func GoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,15 +76,13 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println(user.Email)
-
-	userID, err := createUser(user.Name, user.Email)
-	if err != nil {
-		fmt.Println("Erro saving user to Db")
-		fmt.Println(err.Error())
-		return
-	}
-
-	fmt.Println("User id ", userID)
+	// err = saveUserToDb(user.Email, token.AccessToken)
+	// userID, err := createUser(user.Name, user.Email)
+	// if err != nil {
+	// 	fmt.Println("Erro saving user to Db")
+	// 	fmt.Println(err.Error())
+	// 	return
+	// }
 
 	// err = createToken(userID, token.AccessToken)
 	// if err != nil {
@@ -92,7 +90,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Println(err.Error())
 	// }
 
-	session, err := store.Get(r, cookieName)
+	session, err := store.Get(r, "lizzard")
 	if err != nil {
 		fmt.Println("Error getting session", err.Error())
 		return

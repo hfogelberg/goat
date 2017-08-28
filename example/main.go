@@ -37,21 +37,31 @@ func init() {
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 
-	goat.New(db, sessions.NewCookieStore([]byte(HmacSecret)), "/admin", "lizzardcookie")
+	goat.New(db, sessions.NewCookieStore([]byte(HmacSecret)), "/public", "/admin", "lizzardcookie", true)
 
 	// Routing
 	router.HandleFunc("/", indexHandler)
-	router.HandleFunc("/googlelogin", goat.GoogleLoginHandler)
+	router.HandleFunc("/login", goat.GoogleLoginHandler)
 	router.HandleFunc("/callback", goat.CallbackHandler)
 	router.HandleFunc("/admin", adminHandler)
+	router.HandleFunc("/public", publicHandler)
 
-	// Serve assets
+	adm := router.PathPrefix("/admin").Subrouter()
+	adm.HandleFunc("/", adminHandler)
+
+	mux := http.NewServeMux()
+	mux.Handle("/", router)
+	mux.Handle("/admin/", negroni.New(
+		negroni.HandlerFunc(goat.AuthMiddleware),
+		negroni.Wrap(router),
+	))
+
 	static := http.StripPrefix("/public/", http.FileServer(http.Dir("public")))
-	router.PathPrefix("/public/").Handler(static)
+	router.PathPrefix("/public").Handler(static)
 
-	// Start server
 	n := negroni.Classic()
-	n.UseHandler(router)
+	n.UseHandler(mux)
+
 	n.Run(":3000")
 }
 
@@ -66,6 +76,15 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 func adminHandler(w http.ResponseWriter, r *http.Request) {
 	tpl, err := template.New("").ParseFiles("templates/admin.html", "templates/layout.html")
+	err = tpl.ExecuteTemplate(w, "layout", nil)
+	if err != nil {
+		log.Printf("Error serving Admin %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func publicHandler(w http.ResponseWriter, r *http.Request) {
+	tpl, err := template.New("").ParseFiles("templates/public.html", "templates/layout.html")
 	err = tpl.ExecuteTemplate(w, "layout", nil)
 	if err != nil {
 		log.Printf("Error serving Admin %s\n", err.Error())
