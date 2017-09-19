@@ -1,4 +1,3 @@
-
 package goat
 
 type GoogleUser struct {
@@ -12,4 +11,5 @@ type GoogleUser struct {
 	Picture       string `json:"picture"`
 	Gender        string `json:"gender"`
 	Locale        string `json:"locale"`
+	AccessToken   string
 }

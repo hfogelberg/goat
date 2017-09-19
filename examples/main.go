@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -20,12 +21,12 @@ const (
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 
-	goat.New(sessions.NewCookieStore([]byte(HmacSecret)), "/admin", CookieName)
+	goat.New(sessions.NewCookieStore([]byte(HmacSecret)), "/user", CookieName)
 
 	router.HandleFunc("/", indexHandler)
 	router.HandleFunc("/googlelogin", goat.GoogleLoginHandler)
 	router.HandleFunc("/callback", goat.GoogleCallbackHandler)
-	router.HandleFunc("/admin", adminHandler)
+	router.HandleFunc("/user", userHandler)
 
 	// Serve assets
 	static := http.StripPrefix("/public/", http.FileServer(http.Dir("public")))
@@ -46,12 +47,19 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func adminHandler(w http.ResponseWriter, r *http.Request) {
-	tpl, err := template.New("").ParseFiles("templates/admin.html", "templates/layout.html")
-	err = tpl.ExecuteTemplate(w, "layout", nil)
+func userHandler(w http.ResponseWriter, r *http.Request) {
+	user := goat.GetGoogleUserInfo(w, r)
+	fmt.Println(user.GivenName)
+	fmt.Println(user.FamilyName)
+	fmt.Println(user.Email)
+	fmt.Println(user.AccessToken)
+	fmt.Println(user.Picture)
+
+	tpl, err := template.New("").ParseFiles("templates/user.html", "templates/layout.html")
+	err = tpl.ExecuteTemplate(w, "layout", user)
 	if err != nil {
 		log.Printf("Error serving Admin %s\n", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 

@@ -1,0 +1,13 @@
+{{define "content"}}
+<div class="user">
+  <h1>User</h1>
+
+  <p class="user">
+    {{.GivenName}}<br>
+    {{.FamilyName}}<br>
+    {{.Email}}<br>
+    {{.AccessToken}}<br>
+    <img src="{{.Picture}}" class="thumb"/>
+  </p>
+</div>
+{{end}}

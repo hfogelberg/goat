@@ -72,19 +72,35 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("User email %s\n", user.Email)
-
 	session, err := store.Get(r, cookieName)
 	if err != nil {
 		fmt.Println("Error getting session", err.Error())
 		return
 	}
 
-	session.Values["name"] = user.Name
 	session.Values["email"] = user.Email
+	session.Values["givenName"] = user.GivenName
+	session.Values["familyName"] = user.FamilyName
 	session.Values["picture"] = user.Picture
 	session.Values["accessToken"] = token.AccessToken
 	session.Save(r, w)
 
 	http.Redirect(w, r, urlRedirect, 302)
+}
+
+func GetGoogleUserInfo(w http.ResponseWriter, r *http.Request) GoogleUser {
+	session, err := store.Get(r, cookieName)
+	if err != nil {
+		log.Printf("Error getting session cookie %s\n", err.Error())
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+	}
+
+	var user GoogleUser
+	user.Email = session.Values["email"].(string)
+	user.GivenName = session.Values["givenName"].(string)
+	user.FamilyName = session.Values["familyName"].(string)
+	user.Picture = session.Values["picture"].(string)
+	user.AccessToken = session.Values["accessToken"].(string)
+
+	return user
 }
