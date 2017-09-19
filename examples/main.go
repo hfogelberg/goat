@@ -25,7 +25,7 @@ func main() {
 
 	router.HandleFunc("/", indexHandler)
 	router.HandleFunc("/googlelogin", goat.GoogleLoginHandler)
-	router.HandleFunc("/callback", goat.GoogleCallbackHandler)
+	router.HandleFunc("/gcallback", goat.GoogleCallbackHandler)
 	router.HandleFunc("/user", userHandler)
 
 	// Serve assets
