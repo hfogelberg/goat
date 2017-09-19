@@ -14,8 +14,6 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-const HmacSecret = "secret"
-
 var (
 	googleOauthConfig = &oauth2.Config{
 		RedirectURL:  "http://localhost:3000/callback",
@@ -25,29 +23,28 @@ var (
 			"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint: google.Endpoint,
 	}
-
-	store      *sessions.CookieStore
-	adminUrl   string
-	signupOk   bool
-	publicUrl  string
-	cookieName string
+	store       *sessions.CookieStore
+	urlRedirect string
+	hmacSecret  string
+	cookieName  string
 )
 
-func New(s *sessions.CookieStore, urlPublic string, urlAdmin string, nameOfCookie string, allowSignup bool) {
-	publicUrl = urlPublic
+func New(s *sessions.CookieStore, url string, cName string) {
+	urlRedirect = url
 	store = s
-	signupOk = allowSignup
-	adminUrl = urlAdmin
-	cookieName = nameOfCookie
+	cookieName = cName
 }
 
 func GoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Google login  handler")
 	oauthStateString := uniuri.New()
 	url := googleOauthConfig.AuthCodeURL(oauthStateString)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
-func CallbackHandler(w http.ResponseWriter, r *http.Request) {
+func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Google Callback Handler")
+
 	code := r.FormValue("code")
 	token, err := googleOauthConfig.Exchange(oauth2.NoContext, code)
 	if err != nil {
@@ -75,22 +72,9 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(user.Email)
-	// err = saveUserToDb(user.Email, token.AccessToken)
-	// userID, err := createUser(user.Name, user.Email)
-	// if err != nil {
-	// 	fmt.Println("Erro saving user to Db")
-	// 	fmt.Println(err.Error())
-	// 	return
-	// }
+	fmt.Printf("User email %s\n", user.Email)
 
-	// err = createToken(userID, token.AccessToken)
-	// if err != nil {
-	// 	fmt.Println("Error creating token")
-	// 	fmt.Println(err.Error())
-	// }
-
-	session, err := store.Get(r, "lizzard")
+	session, err := store.Get(r, cookieName)
 	if err != nil {
 		fmt.Println("Error getting session", err.Error())
 		return
@@ -102,5 +86,5 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["accessToken"] = token.AccessToken
 	session.Save(r, w)
 
-	http.Redirect(w, r, "/admin", 302)
+	http.Redirect(w, r, urlRedirect, 302)
 }
