@@ -52,15 +52,21 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Printf("Token %s\n", token)
+
 	if !token.Valid() {
 		log.Println("Retreived invalid token")
 		return
 	}
 
+	fmt.Println("Token is valid")
+
 	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	if err != nil {
 		log.Printf("Error getting user from token %s\n", err.Error())
 	}
+	fmt.Println("RESPONSE FROM GOOGLE")
+	fmt.Print(response)
 
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)
@@ -71,7 +77,9 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error unmarshaling Google user %s\n", err.Error())
 		return
 	}
+	fmt.Println("User unmarshaled")
 
+	fmt.Printf("Cookie name %s\n", cookieName)
 	session, err := store.Get(r, cookieName)
 	if err != nil {
 		fmt.Println("Error getting session", err.Error())
@@ -83,8 +91,10 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["familyName"] = user.FamilyName
 	session.Values["picture"] = user.Picture
 	session.Values["accessToken"] = token.AccessToken
+
 	session.Save(r, w)
 
+	fmt.Printf("Google callback handler redirecting to %s\n", urlRedirect)
 	http.Redirect(w, r, urlRedirect, 302)
 }
 
